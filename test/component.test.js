@@ -96,6 +96,20 @@ test("first-level warning is visually promoted and additional alerts collapse to
   card.remove();
 });
 
+test("repeated alert summary leaves no duplicate text or empty summary row", async () => {
+  const hass = hassFixture(false);
+  hass.states[entities.notification].attributes.title = "🌱 甘藍－注意高溫生產注意";
+  hass.states[entities.notification].attributes.summary = "甘藍－注意高溫生產注意";
+  const card = document.createElement("opencwa-crop-card");
+  document.body.append(card);
+  card.setConfig({ entity: anchor });
+  card.hass = hass;
+  await settle();
+  assert.equal(Boolean(card.shadowRoot.querySelector(".alert-summary")), false);
+  assert.equal(card.shadowRoot.textContent.split("甘藍－注意高溫生產注意").length - 1, 1);
+  card.remove();
+});
+
 
 test("tiny first-level warning keeps actionable summary and More Info access", async () => {
   const card = document.createElement("opencwa-crop-card");
@@ -131,6 +145,33 @@ test("standard compact card keeps crop profile and risk knowledge visible", asyn
   assert.equal(root.classList.contains("compact"), true);
   assert.notEqual(window.getComputedStyle(card.shadowRoot.querySelector(".profile-panel")).display, "none");
   assert.notEqual(window.getComputedStyle(card.shadowRoot.querySelector(".knowledge-panel")).display, "none");
+  card.remove();
+});
+
+test("long action copy is clamped with an accessible expand control", async () => {
+  const longPrevention = "播種期修正。選用適當品種。高溫期品種植後應留意側芽數及舟型葉發生，如有發生表示該品種遭遇高溫逆境，應延後種植。";
+  const hass = hassFixture(false);
+  hass.states[anchor].attributes.items[0].prevention = longPrevention;
+  const card = document.createElement("opencwa-crop-card");
+  document.body.append(card);
+  card.setConfig({ entity: anchor });
+  card.hass = hass;
+  await settle();
+
+  const prevention = card.shadowRoot.querySelector('[data-action-text="prevention"]');
+  const expand = card.shadowRoot.querySelector('[data-action-toggle="prevention"]');
+  assert.equal(prevention.classList.contains("is-collapsed"), true);
+  assert.equal(expand.getAttribute("aria-expanded"), "false");
+  assert.equal(expand.textContent.trim(), "展開全文");
+  assert.equal(card.shadowRoot.querySelector('[data-action-toggle="recovery"]'), null);
+
+  expand.click();
+  const expandedText = card.shadowRoot.querySelector('[data-action-text="prevention"]');
+  const collapse = card.shadowRoot.querySelector('[data-action-toggle="prevention"]');
+  assert.equal(expandedText.classList.contains("is-collapsed"), false);
+  assert.equal(expandedText.textContent.trim(), longPrevention);
+  assert.equal(collapse.getAttribute("aria-expanded"), "true");
+  assert.equal(collapse.textContent.trim(), "收合");
   card.remove();
 });
 

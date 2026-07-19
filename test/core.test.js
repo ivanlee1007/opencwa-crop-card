@@ -69,6 +69,18 @@ test("builds classified model and sorts warning ahead of advisory", () => {
   assert.equal(model.metrics.find((metric) => metric.key === "et0").value, "4.12 mm");
 });
 
+test("removes an alert summary that only repeats the headline with emoji and punctuation", () => {
+  const states = fixture();
+  states[ids.notification].attributes.title = "🌱 甘藍－注意高溫生產注意";
+  states[ids.notification].attributes.summary = "甘藍－注意高溫生產注意";
+  const model = buildCropModel(states, { entity: anchor });
+  assert.equal(model.headline, "🌱 甘藍－注意高溫生產注意");
+  assert.equal(model.summary, "");
+
+  states[ids.notification].attributes.summary = "未來24小時請加強巡田";
+  assert.equal(buildCropModel(states, { entity: anchor }).summary, "未來24小時請加強巡田");
+});
+
 test("warning_active always promotes the card to first-level warning", () => {
   const model = buildCropModel(fixture({ warning_active: true }), { entity: anchor });
   assert.equal(model.level, "warning");

@@ -1,7 +1,7 @@
-/* OpenCWA Crop Card v1.0.1 | MIT */
+/* OpenCWA Crop Card v1.0.2 | MIT */
 (() => {
   // src/core.js
-  var CARD_VERSION = "1.0.1";
+  var CARD_VERSION = "1.0.2";
   var STATUS_SUFFIX = "_agricultural_advisory_status";
   var ENTITY_SUFFIXES = Object.freeze({
     status: "_agricultural_advisory_status",
@@ -86,6 +86,13 @@
     const unit = stateObj.attributes?.unit_of_measurement || "";
     return { value: `${value}${unit ? ` ${unit}` : ""}`, available: true };
   }
+  function comparableText(value) {
+    return String(value ?? "").normalize("NFKC").toLocaleLowerCase("zh-Hant").replace(/[\p{P}\p{S}\s]/gu, "");
+  }
+  function removeRepeatedSummary(headline, summary) {
+    const copy = String(summary ?? "").trim();
+    return copy && comparableText(headline) === comparableText(copy) ? "" : copy;
+  }
   function buildCropModel(states = {}, config = {}) {
     const normalized = normalizedConfig(config);
     const entities = cropEntityMap(normalized.entity);
@@ -115,7 +122,8 @@
     const unavailableCopy = level === "unavailable";
     const noDataCopy = level === "no-data";
     const headline = unavailableCopy ? "\u8FB2\u696D\u8CC7\u6599\u66AB\u6642\u7121\u6CD5\u53D6\u5F97" : noDataCopy ? "\u76EE\u524D\u6C92\u6709\u76F8\u7B26\u7684\u4F5C\u7269\u5C08\u5C6C\u8CC7\u6599" : notification?.attributes?.title || (level === "warning" ? "\u4E00\u7D1A\u8FB2\u696D\u8B66\u793A" : level === "advisory" ? "\u8FB2\u8015\u6CE8\u610F\u4E8B\u9805" : "\u76EE\u524D\u4F5C\u7269\u98A8\u96AA\u6982\u6CC1");
-    const summary = unavailableCopy ? "\u76EE\u524D\u7121\u6CD5\u78BA\u8A8D\u5373\u6642\u8FB2\u696D\u98A8\u96AA\uFF0C\u8ACB\u76F4\u63A5\u5DE1\u67E5\u7530\u5340\u4E26\u7A0D\u5F8C\u91CD\u65B0\u6574\u7406\u3002" : noDataCopy ? "\u8CC7\u6599\u4E0D\u8DB3\u4E0D\u4EE3\u8868\u6C92\u6709\u8FB2\u696D\u98A8\u96AA\uFF0C\u8ACB\u6301\u7E8C\u7559\u610F\u4E00\u822C\u6C23\u8C61\u8B66\u7279\u5831\u8207\u7530\u9593\u72C0\u6CC1\u3002" : notification?.attributes?.summary || notification?.attributes?.message || "\u76EE\u524D\u6C92\u6709\u4F5C\u7269\u5C08\u5C6C\u8B66\u793A";
+    const rawSummary = unavailableCopy ? "\u76EE\u524D\u7121\u6CD5\u78BA\u8A8D\u5373\u6642\u8FB2\u696D\u98A8\u96AA\uFF0C\u8ACB\u76F4\u63A5\u5DE1\u67E5\u7530\u5340\u4E26\u7A0D\u5F8C\u91CD\u65B0\u6574\u7406\u3002" : noDataCopy ? "\u8CC7\u6599\u4E0D\u8DB3\u4E0D\u4EE3\u8868\u6C92\u6709\u8FB2\u696D\u98A8\u96AA\uFF0C\u8ACB\u6301\u7E8C\u7559\u610F\u4E00\u822C\u6C23\u8C61\u8B66\u7279\u5831\u8207\u7530\u9593\u72C0\u6CC1\u3002" : notification?.attributes?.summary || notification?.attributes?.message || "\u76EE\u524D\u6C92\u6709\u4F5C\u7269\u5C08\u5C6C\u8B66\u793A";
+    const summary = removeRepeatedSummary(headline, rawSummary);
     return {
       error: null,
       config: normalized,
@@ -276,11 +284,14 @@
   .panel-wide { grid-column:1/-1; }
   .panel-title { display:flex; align-items:center; gap:8px; margin:0 0 11px; font-size:13px; font-weight:800; color:var(--primary-text-color); }
   .panel-title ha-icon { color:var(--crop-accent); --mdc-icon-size:19px; }
-  .action-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+  .action-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); align-items:start; gap:10px; }
   .action { min-width:0; padding:11px 12px; border-radius:11px; background:var(--secondary-background-color,#f1f4f5); }
   .action-label { display:flex; gap:7px; align-items:center; color:var(--secondary-text-color); font-size:11px; font-weight:750; }
   .action-label ha-icon { --mdc-icon-size:17px; color:var(--crop-accent); }
   .action-text { margin-top:6px; font-size:13px; line-height:1.55; white-space:pre-wrap; overflow-wrap:anywhere; }
+  .action-text.is-collapsed { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:3; overflow:hidden; }
+  .action-more { display:inline-flex; align-items:center; margin-top:6px; padding:3px 0; border:0; color:var(--crop-accent); background:transparent; cursor:pointer; font-size:11px; font-weight:750; }
+  .action-more:hover { text-decoration:underline; }
   .metric-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
   .metric { min-width:0; border:0; text-align:left; color:inherit; cursor:pointer; padding:10px 11px; border-radius:11px; background:var(--secondary-background-color,#f1f4f5); }
   .metric:hover { background:color-mix(in srgb,var(--crop-soft) 68%,var(--secondary-background-color,#f1f4f5)); }
@@ -354,12 +365,14 @@
       this._config = normalizedConfig({});
       this._layout = "regular";
       this._expandedAlerts = false;
+      this._expandedActions = /* @__PURE__ */ new Set();
       this._renderQueued = false;
       this._observer = null;
     }
     setConfig(config) {
       this._config = normalizedConfig(config);
       this._expandedAlerts = this._config.default_expand_alerts;
+      this._expandedActions.clear();
       this._measure();
       this._queueRender();
     }
@@ -421,10 +434,11 @@
         <div class="alert-item-meta">${escapeHtml([item.stage || item.growth, item.threshold && item.measures ? `\u9580\u6ABB ${item.threshold} ${item.measures}` : ""].filter(Boolean).join(" \xB7 "))}</div>
       </div>`).join("")}</div>` : "";
       const toggle = count > 1 ? `<button class="alert-toggle" data-alert-toggle aria-expanded="${this._expandedAlerts}">${this._expandedAlerts ? "\u6536\u5408" : `+${more}`}</button>` : "";
+      const summary = model.summary ? `<div class="alert-summary">${escapeHtml(model.summary)}</div>` : "";
       const accessibility = [model.levelLabel, model.headline, model.summary, model.items[0]?.prevention ? `\u7ACB\u5373\u9632\u7BC4\uFF1A${model.items[0].prevention}` : ""].filter(Boolean).join("\u3002");
       return `<section class="alert alert-${model.level}" data-entity="${escapeHtml(model.entities.notification)}" role="button" tabindex="0" aria-label="${escapeHtml(accessibility)}">
       <div class="alert-icon">${icon(ICONS[model.level] || ICONS.unavailable)}</div>
-      <div class="alert-copy"><div class="alert-kicker">${escapeHtml(model.levelLabel)}</div><div class="alert-title">${escapeHtml(model.headline)}</div><div class="alert-summary">${escapeHtml(model.summary)}</div></div>
+      <div class="alert-copy"><div class="alert-kicker">${escapeHtml(model.levelLabel)}</div><div class="alert-title">${escapeHtml(model.headline)}</div>${summary}</div>
       ${toggle}${list}
     </section>`;
     }
@@ -432,9 +446,16 @@
       const item = model.items[0] || {};
       const prevention = item.prevention || (model.level === "normal" ? "\u7DAD\u6301\u4F8B\u884C\u5DE1\u7530\u8207\u704C\u6E89\u7D00\u9304\u3002" : "\u76EE\u524D\u6C92\u6709\u53EF\u7528\u7684\u5373\u6642\u9632\u7BC4\u5EFA\u8B70\uFF0C\u8ACB\u53C3\u8003\u4F5C\u7269\u98A8\u96AA\u77E5\u8B58\u5EAB\u3002");
       const recovery = item.recovery || "\u82E5\u707D\u5BB3\u767C\u751F\uFF0C\u5148\u8A18\u9304\u7530\u5340\u72C0\u6CC1\u4E26\u4F9D\u5C08\u696D\u8FB2\u696D\u55AE\u4F4D\u6307\u5F15\u8655\u7F6E\u3002";
+      const renderAction = (key, label, actionIcon, text) => {
+        const isLong = Array.from(String(text).trim()).length > 42;
+        const expanded = this._expandedActions.has(key);
+        const collapsed = isLong && !expanded;
+        const control = isLong ? `<button class="action-more" data-action-toggle="${key}" aria-controls="opencwa-action-${key}" aria-expanded="${expanded}">${expanded ? "\u6536\u5408" : "\u5C55\u958B\u5168\u6587"}</button>` : "";
+        return `<div class="action"><div class="action-label">${icon(actionIcon)}${escapeHtml(label)}</div><div id="opencwa-action-${key}" class="action-text${collapsed ? " is-collapsed" : ""}" data-action-text="${key}">${escapeHtml(text)}</div>${control}</div>`;
+      };
       return `<section class="panel panel-wide action-panel"><h3 class="panel-title">${icon("mdi:clipboard-check-outline")}\u73FE\u5728\u8981\u505A</h3><div class="action-grid">
-      <div class="action"><div class="action-label">${icon("mdi:shield-sun-outline")}\u7ACB\u5373\u9632\u7BC4</div><div class="action-text">${escapeHtml(prevention)}</div></div>
-      <div class="action"><div class="action-label">${icon("mdi:leaf-circle-outline")}\u707D\u5F8C\u5FA9\u8015</div><div class="action-text">${escapeHtml(recovery)}</div></div>
+      ${renderAction("prevention", "\u7ACB\u5373\u9632\u7BC4", "mdi:shield-sun-outline", prevention)}
+      ${renderAction("recovery", "\u707D\u5F8C\u5FA9\u8015", "mdi:leaf-circle-outline", recovery)}
     </div></section>`;
     }
     _renderMetrics(model) {
@@ -478,6 +499,12 @@
         this._expandedAlerts = !this._expandedAlerts;
         this._render();
       });
+      this.shadowRoot.querySelectorAll("[data-action-toggle]").forEach((button) => button.addEventListener("click", () => {
+        const key = button.dataset.actionToggle;
+        if (this._expandedActions.has(key)) this._expandedActions.delete(key);
+        else this._expandedActions.add(key);
+        this._render();
+      }));
       this.shadowRoot.querySelectorAll("[data-entity]").forEach((element) => {
         const open = (event) => {
           if (event.target.closest?.("[data-alert-toggle]")) return;

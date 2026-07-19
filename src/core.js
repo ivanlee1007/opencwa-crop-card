@@ -97,6 +97,18 @@ function valueOf(stateObj, digits = 2) {
   return { value: `${value}${unit ? ` ${unit}` : ""}`, available: true };
 }
 
+function comparableText(value) {
+  return String(value ?? "")
+    .normalize("NFKC")
+    .toLocaleLowerCase("zh-Hant")
+    .replace(/[\p{P}\p{S}\s]/gu, "");
+}
+
+function removeRepeatedSummary(headline, summary) {
+  const copy = String(summary ?? "").trim();
+  return copy && comparableText(headline) === comparableText(copy) ? "" : copy;
+}
+
 export function buildCropModel(states = {}, config = {}) {
   const normalized = normalizedConfig(config);
   const entities = cropEntityMap(normalized.entity);
@@ -132,11 +144,12 @@ export function buildCropModel(states = {}, config = {}) {
     : noDataCopy
       ? "目前沒有相符的作物專屬資料"
       : notification?.attributes?.title || (level === "warning" ? "一級農業警示" : level === "advisory" ? "農耕注意事項" : "目前作物風險概況");
-  const summary = unavailableCopy
+  const rawSummary = unavailableCopy
     ? "目前無法確認即時農業風險，請直接巡查田區並稍後重新整理。"
     : noDataCopy
       ? "資料不足不代表沒有農業風險，請持續留意一般氣象警特報與田間狀況。"
       : notification?.attributes?.summary || notification?.attributes?.message || "目前沒有作物專屬警示";
+  const summary = removeRepeatedSummary(headline, rawSummary);
   return {
     error: null,
     config: normalized,

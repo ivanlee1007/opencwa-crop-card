@@ -58,11 +58,14 @@ const css = String.raw`
   .panel-wide { grid-column:1/-1; }
   .panel-title { display:flex; align-items:center; gap:8px; margin:0 0 11px; font-size:13px; font-weight:800; color:var(--primary-text-color); }
   .panel-title ha-icon { color:var(--crop-accent); --mdc-icon-size:19px; }
-  .action-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+  .action-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); align-items:start; gap:10px; }
   .action { min-width:0; padding:11px 12px; border-radius:11px; background:var(--secondary-background-color,#f1f4f5); }
   .action-label { display:flex; gap:7px; align-items:center; color:var(--secondary-text-color); font-size:11px; font-weight:750; }
   .action-label ha-icon { --mdc-icon-size:17px; color:var(--crop-accent); }
   .action-text { margin-top:6px; font-size:13px; line-height:1.55; white-space:pre-wrap; overflow-wrap:anywhere; }
+  .action-text.is-collapsed { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:3; overflow:hidden; }
+  .action-more { display:inline-flex; align-items:center; margin-top:6px; padding:3px 0; border:0; color:var(--crop-accent); background:transparent; cursor:pointer; font-size:11px; font-weight:750; }
+  .action-more:hover { text-decoration:underline; }
   .metric-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
   .metric { min-width:0; border:0; text-align:left; color:inherit; cursor:pointer; padding:10px 11px; border-radius:11px; background:var(--secondary-background-color,#f1f4f5); }
   .metric:hover { background:color-mix(in srgb,var(--crop-soft) 68%,var(--secondary-background-color,#f1f4f5)); }
@@ -139,6 +142,7 @@ export class OpenCwaCropCard extends HTMLElement {
     this._config = normalizedConfig({});
     this._layout = "regular";
     this._expandedAlerts = false;
+    this._expandedActions = new Set();
     this._renderQueued = false;
     this._observer = null;
   }
@@ -146,6 +150,7 @@ export class OpenCwaCropCard extends HTMLElement {
   setConfig(config) {
     this._config = normalizedConfig(config);
     this._expandedAlerts = this._config.default_expand_alerts;
+    this._expandedActions.clear();
     this._measure();
     this._queueRender();
   }
@@ -219,10 +224,11 @@ export class OpenCwaCropCard extends HTMLElement {
         <div class="alert-item-meta">${escapeHtml([item.stage || item.growth, item.threshold && item.measures ? `門檻 ${item.threshold} ${item.measures}` : ""].filter(Boolean).join(" · "))}</div>
       </div>`).join("")}</div>` : "";
     const toggle = count > 1 ? `<button class="alert-toggle" data-alert-toggle aria-expanded="${this._expandedAlerts}">${this._expandedAlerts ? "收合" : `+${more}`}</button>` : "";
+    const summary = model.summary ? `<div class="alert-summary">${escapeHtml(model.summary)}</div>` : "";
     const accessibility = [model.levelLabel, model.headline, model.summary, model.items[0]?.prevention ? `立即防範：${model.items[0].prevention}` : ""].filter(Boolean).join("。");
     return `<section class="alert alert-${model.level}" data-entity="${escapeHtml(model.entities.notification)}" role="button" tabindex="0" aria-label="${escapeHtml(accessibility)}">
       <div class="alert-icon">${icon(ICONS[model.level] || ICONS.unavailable)}</div>
-      <div class="alert-copy"><div class="alert-kicker">${escapeHtml(model.levelLabel)}</div><div class="alert-title">${escapeHtml(model.headline)}</div><div class="alert-summary">${escapeHtml(model.summary)}</div></div>
+      <div class="alert-copy"><div class="alert-kicker">${escapeHtml(model.levelLabel)}</div><div class="alert-title">${escapeHtml(model.headline)}</div>${summary}</div>
       ${toggle}${list}
     </section>`;
   }
@@ -231,9 +237,16 @@ export class OpenCwaCropCard extends HTMLElement {
     const item = model.items[0] || {};
     const prevention = item.prevention || (model.level === "normal" ? "維持例行巡田與灌溉紀錄。" : "目前沒有可用的即時防範建議，請參考作物風險知識庫。" );
     const recovery = item.recovery || "若災害發生，先記錄田區狀況並依專業農業單位指引處置。";
+    const renderAction = (key, label, actionIcon, text) => {
+      const isLong = Array.from(String(text).trim()).length > 42;
+      const expanded = this._expandedActions.has(key);
+      const collapsed = isLong && !expanded;
+      const control = isLong ? `<button class="action-more" data-action-toggle="${key}" aria-controls="opencwa-action-${key}" aria-expanded="${expanded}">${expanded ? "收合" : "展開全文"}</button>` : "";
+      return `<div class="action"><div class="action-label">${icon(actionIcon)}${escapeHtml(label)}</div><div id="opencwa-action-${key}" class="action-text${collapsed ? " is-collapsed" : ""}" data-action-text="${key}">${escapeHtml(text)}</div>${control}</div>`;
+    };
     return `<section class="panel panel-wide action-panel"><h3 class="panel-title">${icon("mdi:clipboard-check-outline")}現在要做</h3><div class="action-grid">
-      <div class="action"><div class="action-label">${icon("mdi:shield-sun-outline")}立即防範</div><div class="action-text">${escapeHtml(prevention)}</div></div>
-      <div class="action"><div class="action-label">${icon("mdi:leaf-circle-outline")}災後復耕</div><div class="action-text">${escapeHtml(recovery)}</div></div>
+      ${renderAction("prevention", "立即防範", "mdi:shield-sun-outline", prevention)}
+      ${renderAction("recovery", "災後復耕", "mdi:leaf-circle-outline", recovery)}
     </div></section>`;
   }
 
@@ -279,6 +292,12 @@ export class OpenCwaCropCard extends HTMLElement {
       <div class="crop-body">${this._renderAlert(model)}<div class="section-grid">${this._renderActions(model)}${this._renderMetrics(model)}${this._renderProfile(model)}${this._renderKnowledge(model)}</div>${this._renderSource(model)}</div>
     </div></ha-card>`;
     this.shadowRoot.querySelector("[data-alert-toggle]")?.addEventListener("click", () => { this._expandedAlerts = !this._expandedAlerts; this._render(); });
+    this.shadowRoot.querySelectorAll("[data-action-toggle]").forEach((button) => button.addEventListener("click", () => {
+      const key = button.dataset.actionToggle;
+      if (this._expandedActions.has(key)) this._expandedActions.delete(key);
+      else this._expandedActions.add(key);
+      this._render();
+    }));
     this.shadowRoot.querySelectorAll("[data-entity]").forEach((element) => {
       const open = (event) => {
         if (event.target.closest?.("[data-alert-toggle]")) return;
