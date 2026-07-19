@@ -1,13 +1,13 @@
 import { escapeHtml, findCropOptions, normalizedConfig } from "./core.js";
 
 const editorCss = `
-  :host{display:block;color:var(--primary-text-color)}
-  .editor{display:grid;gap:16px;padding:4px 0 12px}
-  .section{display:grid;gap:10px;padding:14px;border:1px solid var(--divider-color,#ddd);border-radius:12px;background:var(--card-background-color,#fff)}
+  :host{display:block;min-width:0;color:var(--primary-text-color)}
+  .editor{display:grid;min-width:0;gap:16px;padding:4px 0 12px}
+  .section{display:grid;min-width:0;gap:10px;padding:14px;border:1px solid var(--divider-color,#ddd);border-radius:12px;background:var(--card-background-color,#fff)}
   .section-title{display:flex;align-items:center;gap:8px;font-weight:750;font-size:14px}
   .section-title ha-icon{--mdc-icon-size:20px;color:var(--primary-color,#03a9f4)}
-  label.field{display:grid;gap:6px;color:var(--secondary-text-color);font-size:12px;font-weight:650}
-  select,input[type=text]{width:100%;min-height:42px;padding:9px 11px;border:1px solid var(--input-idle-line-color,#a7adb2);border-radius:8px;background:var(--input-fill-color,var(--card-background-color,#fff));color:var(--primary-text-color);font:inherit;font-size:14px}
+  label.field{display:grid;min-width:0;gap:6px;color:var(--secondary-text-color);font-size:12px;font-weight:650}
+  select,input[type=text]{box-sizing:border-box;width:100%;max-width:100%;min-width:0;min-height:42px;padding:9px 11px;border:1px solid var(--input-idle-line-color,#a7adb2);border-radius:8px;background:var(--input-fill-color,var(--card-background-color,#fff));color:var(--primary-text-color);font:inherit;font-size:14px}
   select:focus,input:focus{outline:2px solid color-mix(in srgb,var(--primary-color,#03a9f4) 55%,transparent);outline-offset:1px}
   .toggle{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;padding:8px 0;border-top:1px solid var(--divider-color,#eee)}
   .toggle:first-of-type{border-top:0}

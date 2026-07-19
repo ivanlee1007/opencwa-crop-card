@@ -148,32 +148,6 @@ test("standard compact card keeps crop profile and risk knowledge visible", asyn
   card.remove();
 });
 
-test("long action copy is clamped with an accessible expand control", async () => {
-  const longPrevention = "播種期修正。選用適當品種。高溫期品種植後應留意側芽數及舟型葉發生，如有發生表示該品種遭遇高溫逆境，應延後種植。";
-  const hass = hassFixture(false);
-  hass.states[anchor].attributes.items[0].prevention = longPrevention;
-  const card = document.createElement("opencwa-crop-card");
-  document.body.append(card);
-  card.setConfig({ entity: anchor });
-  card.hass = hass;
-  await settle();
-
-  const prevention = card.shadowRoot.querySelector('[data-action-text="prevention"]');
-  const expand = card.shadowRoot.querySelector('[data-action-toggle="prevention"]');
-  assert.equal(prevention.classList.contains("is-collapsed"), true);
-  assert.equal(expand.getAttribute("aria-expanded"), "false");
-  assert.equal(expand.textContent.trim(), "展開全文");
-  assert.equal(card.shadowRoot.querySelector('[data-action-toggle="recovery"]'), null);
-
-  expand.click();
-  const expandedText = card.shadowRoot.querySelector('[data-action-text="prevention"]');
-  const collapse = card.shadowRoot.querySelector('[data-action-toggle="prevention"]');
-  assert.equal(expandedText.classList.contains("is-collapsed"), false);
-  assert.equal(expandedText.textContent.trim(), longPrevention);
-  assert.equal(collapse.getAttribute("aria-expanded"), "true");
-  assert.equal(collapse.textContent.trim(), "收合");
-  card.remove();
-});
 
 test("editor lists discovered crops and emits strict boolean config", async () => {
   const editor = document.createElement("opencwa-crop-card-editor");
@@ -193,6 +167,29 @@ test("editor lists discovered crops and emits strict boolean config", async () =
   cropSelect.value = anchor;
   cropSelect.dispatchEvent(new Event("change", { bubbles: true }));
   assert.equal(next.profile_id, "stable-crop-1");
+  editor.remove();
+});
+
+test("editor text and select controls stay inside their section box", async () => {
+  const editor = document.createElement("opencwa-crop-card-editor");
+  document.body.append(editor);
+  editor.setConfig({ entity: anchor });
+  editor.hass = hassFixture(false);
+  await settle();
+  const section = editor.shadowRoot.querySelector(".section");
+  const field = editor.shadowRoot.querySelector("label.field");
+  const input = editor.shadowRoot.querySelector('input[type="text"]');
+  const select = editor.shadowRoot.querySelector("select");
+  for (const container of [section, field]) {
+    const minWidth = window.getComputedStyle(container).minWidth;
+    assert.notEqual(minWidth, "");
+    assert.equal(Number.parseFloat(minWidth), 0);
+  }
+  for (const control of [input, select]) {
+    const style = window.getComputedStyle(control);
+    assert.equal(style.boxSizing, "border-box");
+    assert.equal(style.maxWidth, "100%");
+  }
   editor.remove();
 });
 

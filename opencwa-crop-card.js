@@ -1,7 +1,7 @@
-/* OpenCWA Crop Card v1.0.2 | MIT */
+/* OpenCWA Crop Card v1.0.3 | MIT */
 (() => {
   // src/core.js
-  var CARD_VERSION = "1.0.2";
+  var CARD_VERSION = "1.0.3";
   var STATUS_SUFFIX = "_agricultural_advisory_status";
   var ENTITY_SUFFIXES = Object.freeze({
     status: "_agricultural_advisory_status",
@@ -174,13 +174,13 @@
 
   // src/editor.js
   var editorCss = `
-  :host{display:block;color:var(--primary-text-color)}
-  .editor{display:grid;gap:16px;padding:4px 0 12px}
-  .section{display:grid;gap:10px;padding:14px;border:1px solid var(--divider-color,#ddd);border-radius:12px;background:var(--card-background-color,#fff)}
+  :host{display:block;min-width:0;color:var(--primary-text-color)}
+  .editor{display:grid;min-width:0;gap:16px;padding:4px 0 12px}
+  .section{display:grid;min-width:0;gap:10px;padding:14px;border:1px solid var(--divider-color,#ddd);border-radius:12px;background:var(--card-background-color,#fff)}
   .section-title{display:flex;align-items:center;gap:8px;font-weight:750;font-size:14px}
   .section-title ha-icon{--mdc-icon-size:20px;color:var(--primary-color,#03a9f4)}
-  label.field{display:grid;gap:6px;color:var(--secondary-text-color);font-size:12px;font-weight:650}
-  select,input[type=text]{width:100%;min-height:42px;padding:9px 11px;border:1px solid var(--input-idle-line-color,#a7adb2);border-radius:8px;background:var(--input-fill-color,var(--card-background-color,#fff));color:var(--primary-text-color);font:inherit;font-size:14px}
+  label.field{display:grid;min-width:0;gap:6px;color:var(--secondary-text-color);font-size:12px;font-weight:650}
+  select,input[type=text]{box-sizing:border-box;width:100%;max-width:100%;min-width:0;min-height:42px;padding:9px 11px;border:1px solid var(--input-idle-line-color,#a7adb2);border-radius:8px;background:var(--input-fill-color,var(--card-background-color,#fff));color:var(--primary-text-color);font:inherit;font-size:14px}
   select:focus,input:focus{outline:2px solid color-mix(in srgb,var(--primary-color,#03a9f4) 55%,transparent);outline-offset:1px}
   .toggle{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;padding:8px 0;border-top:1px solid var(--divider-color,#eee)}
   .toggle:first-of-type{border-top:0}
@@ -284,14 +284,11 @@
   .panel-wide { grid-column:1/-1; }
   .panel-title { display:flex; align-items:center; gap:8px; margin:0 0 11px; font-size:13px; font-weight:800; color:var(--primary-text-color); }
   .panel-title ha-icon { color:var(--crop-accent); --mdc-icon-size:19px; }
-  .action-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); align-items:start; gap:10px; }
+  .action-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
   .action { min-width:0; padding:11px 12px; border-radius:11px; background:var(--secondary-background-color,#f1f4f5); }
   .action-label { display:flex; gap:7px; align-items:center; color:var(--secondary-text-color); font-size:11px; font-weight:750; }
   .action-label ha-icon { --mdc-icon-size:17px; color:var(--crop-accent); }
   .action-text { margin-top:6px; font-size:13px; line-height:1.55; white-space:pre-wrap; overflow-wrap:anywhere; }
-  .action-text.is-collapsed { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:3; overflow:hidden; }
-  .action-more { display:inline-flex; align-items:center; margin-top:6px; padding:3px 0; border:0; color:var(--crop-accent); background:transparent; cursor:pointer; font-size:11px; font-weight:750; }
-  .action-more:hover { text-decoration:underline; }
   .metric-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
   .metric { min-width:0; border:0; text-align:left; color:inherit; cursor:pointer; padding:10px 11px; border-radius:11px; background:var(--secondary-background-color,#f1f4f5); }
   .metric:hover { background:color-mix(in srgb,var(--crop-soft) 68%,var(--secondary-background-color,#f1f4f5)); }
@@ -365,14 +362,12 @@
       this._config = normalizedConfig({});
       this._layout = "regular";
       this._expandedAlerts = false;
-      this._expandedActions = /* @__PURE__ */ new Set();
       this._renderQueued = false;
       this._observer = null;
     }
     setConfig(config) {
       this._config = normalizedConfig(config);
       this._expandedAlerts = this._config.default_expand_alerts;
-      this._expandedActions.clear();
       this._measure();
       this._queueRender();
     }
@@ -446,16 +441,9 @@
       const item = model.items[0] || {};
       const prevention = item.prevention || (model.level === "normal" ? "\u7DAD\u6301\u4F8B\u884C\u5DE1\u7530\u8207\u704C\u6E89\u7D00\u9304\u3002" : "\u76EE\u524D\u6C92\u6709\u53EF\u7528\u7684\u5373\u6642\u9632\u7BC4\u5EFA\u8B70\uFF0C\u8ACB\u53C3\u8003\u4F5C\u7269\u98A8\u96AA\u77E5\u8B58\u5EAB\u3002");
       const recovery = item.recovery || "\u82E5\u707D\u5BB3\u767C\u751F\uFF0C\u5148\u8A18\u9304\u7530\u5340\u72C0\u6CC1\u4E26\u4F9D\u5C08\u696D\u8FB2\u696D\u55AE\u4F4D\u6307\u5F15\u8655\u7F6E\u3002";
-      const renderAction = (key, label, actionIcon, text) => {
-        const isLong = Array.from(String(text).trim()).length > 42;
-        const expanded = this._expandedActions.has(key);
-        const collapsed = isLong && !expanded;
-        const control = isLong ? `<button class="action-more" data-action-toggle="${key}" aria-controls="opencwa-action-${key}" aria-expanded="${expanded}">${expanded ? "\u6536\u5408" : "\u5C55\u958B\u5168\u6587"}</button>` : "";
-        return `<div class="action"><div class="action-label">${icon(actionIcon)}${escapeHtml(label)}</div><div id="opencwa-action-${key}" class="action-text${collapsed ? " is-collapsed" : ""}" data-action-text="${key}">${escapeHtml(text)}</div>${control}</div>`;
-      };
       return `<section class="panel panel-wide action-panel"><h3 class="panel-title">${icon("mdi:clipboard-check-outline")}\u73FE\u5728\u8981\u505A</h3><div class="action-grid">
-      ${renderAction("prevention", "\u7ACB\u5373\u9632\u7BC4", "mdi:shield-sun-outline", prevention)}
-      ${renderAction("recovery", "\u707D\u5F8C\u5FA9\u8015", "mdi:leaf-circle-outline", recovery)}
+      <div class="action"><div class="action-label">${icon("mdi:shield-sun-outline")}\u7ACB\u5373\u9632\u7BC4</div><div class="action-text">${escapeHtml(prevention)}</div></div>
+      <div class="action"><div class="action-label">${icon("mdi:leaf-circle-outline")}\u707D\u5F8C\u5FA9\u8015</div><div class="action-text">${escapeHtml(recovery)}</div></div>
     </div></section>`;
     }
     _renderMetrics(model) {
@@ -499,12 +487,6 @@
         this._expandedAlerts = !this._expandedAlerts;
         this._render();
       });
-      this.shadowRoot.querySelectorAll("[data-action-toggle]").forEach((button) => button.addEventListener("click", () => {
-        const key = button.dataset.actionToggle;
-        if (this._expandedActions.has(key)) this._expandedActions.delete(key);
-        else this._expandedActions.add(key);
-        this._render();
-      }));
       this.shadowRoot.querySelectorAll("[data-entity]").forEach((element) => {
         const open = (event) => {
           if (event.target.closest?.("[data-alert-toggle]")) return;
