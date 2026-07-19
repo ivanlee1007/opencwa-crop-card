@@ -119,6 +119,21 @@ test("tiny first-level warning keeps actionable summary and More Info access", a
   card.remove();
 });
 
+test("standard compact card keeps crop profile and risk knowledge visible", async () => {
+  const card = document.createElement("opencwa-crop-card");
+  document.body.append(card);
+  card.setConfig({ entity: anchor, show_knowledge: true });
+  card.hass = hassFixture(false);
+  await settle();
+  FakeResizeObserver.instances.at(-1).emit(492, 715);
+  await settle();
+  const root = card.shadowRoot.querySelector("ha-card");
+  assert.equal(root.classList.contains("compact"), true);
+  assert.notEqual(window.getComputedStyle(card.shadowRoot.querySelector(".profile-panel")).display, "none");
+  assert.notEqual(window.getComputedStyle(card.shadowRoot.querySelector(".knowledge-panel")).display, "none");
+  card.remove();
+});
+
 test("editor lists discovered crops and emits strict boolean config", async () => {
   const editor = document.createElement("opencwa-crop-card-editor");
   document.body.append(editor);

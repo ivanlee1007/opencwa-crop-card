@@ -101,8 +101,6 @@ const css = String.raw`
   .compact .crop-body { padding:10px 14px 14px; }
   .compact .section-grid { grid-template-columns:1fr; }
   .compact .panel { grid-column:1; }
-  .compact .knowledge-panel { display:none; }
-  .compact .profile-panel { display:none; }
   .compact .action-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .portrait .crop-header { grid-template-columns:auto minmax(0,1fr); justify-items:stretch; text-align:left; gap:8px; padding:9px 10px; }
   .portrait .crop-mark { width:34px; height:34px; border-radius:10px; }

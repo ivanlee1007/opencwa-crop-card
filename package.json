@@ -1,6 +1,6 @@
 {
   "name": "opencwa-crop-card",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Professional responsive Lovelace crop advisory card for OpenCWA",
   "type": "module",
   "scripts": {
