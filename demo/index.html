@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>OpenCWA Crop Card Visual Matrix</title>
+  <style>
+    :root{--card-background-color:#fff;--primary-text-color:#17221b;--secondary-text-color:#5f6f65;--secondary-background-color:#eef3ef;--divider-color:#d7e0d9;--disabled-text-color:#89958d}
+    body{margin:0;padding:28px;background:#e8eee9;font-family:Inter,"Noto Sans TC",system-ui,sans-serif;color:#17221b}
+    h1{margin:0 0 20px;font-size:24px}.matrix{display:flex;flex-wrap:wrap;align-items:flex-start;gap:28px}.fixture{display:grid;gap:7px}.label{font:600 12px ui-monospace,monospace;color:#526057}
+    .box{box-shadow:0 10px 32px rgba(34,66,45,.13);border-radius:16px;overflow:hidden}.s1{width:210px;height:64px}.s2{width:150px;height:250px}.s3{width:420px;height:220px}.s4{width:720px;height:500px}.s5{width:1000px;height:500px}
+    opencwa-crop-card{width:100%;height:100%}ha-icon{display:inline-grid;place-items:center}ha-icon::after{content:"◆";font-size:10px}
+  </style>
+  <script src="../opencwa-crop-card.js"></script>
+</head>
+<body>
+  <h1>OpenCWA Crop Card — Responsive Matrix</h1>
+  <div class="matrix">
+    <div class="fixture"><div class="label">210×64 · tiny</div><div class="box s1"><opencwa-crop-card></opencwa-crop-card></div></div>
+    <div class="fixture"><div class="label">150×250 · portrait</div><div class="box s2"><opencwa-crop-card></opencwa-crop-card></div></div>
+    <div class="fixture"><div class="label">420×220 · compact</div><div class="box s3"><opencwa-crop-card></opencwa-crop-card></div></div>
+    <div class="fixture"><div class="label">720×500 · regular</div><div class="box s4"><opencwa-crop-card></opencwa-crop-card></div></div>
+    <div class="fixture"><div class="label">1000×500 · expanded</div><div class="box s5"><opencwa-crop-card></opencwa-crop-card></div></div>
+  </div>
+  <script>
+    const anchor="sensor.demo_agricultural_advisory_status";
+    const root=anchor.replace(/_agricultural_advisory_status$/,'');
+    const states={
+      [anchor]:{entity_id:anchor,state:'warning',last_updated:new Date().toISOString(),attributes:{crop_profile_id:'01KXXDEMO123456',crop_name:'一期甘藍示範田區',warning_active:true,advisory_active:false,warning_count:2,advisory_count:0,matched_total:2,source_provider:'高雄農來訊',source_timestamp:new Date().toISOString(),provider_available:true,items:[{classification:'warning',disaster:'豪雨與強風一級警示',growth:'營養生長期、採收期',stage:'結球期',threshold:'200',measures:'毫米',effect:'田區積水、根系缺氧及葉片受損。',prevention:'立即清溝排水、加固防蟲網，並巡查低窪區域。',recovery:'儘速排除積水，待植株恢復後再逐步施肥。'},{classification:'warning',disaster:'持續高溫',prevention:'定期灌溉降溫並適度遮陰。'}],rules:[{disaster:'豪雨',stage:'成長期',effect:'葉片浸水腐爛、根部受損。',prevention:'高畦並加強排水。',recovery:'排除田間積水並防治軟腐病。',threshold:'200',measures:'毫米',duration:'24'},{disaster:'高溫',stage:'結球期',effect:'結球延遲且不緊實。',prevention:'調整播種期並選用耐熱品種。',recovery:'定期灌溉降溫。',threshold:'30',measures:'°C',duration:'24'}]}},
+      [`${root}_agricultural_advisory_notification`]:{entity_id:`${root}_agricultural_advisory_notification`,state:'active',attributes:{title:'甘藍豪雨一級警示',summary:'未來24小時有豪雨風險，請立即巡查排水與固定設施。'}},
+      [`${root}_crop_warning`]:{entity_id:`${root}_crop_warning`,state:'on',attributes:{}},
+      [`${root}_crop_advisory`]:{entity_id:`${root}_crop_advisory`,state:'off',attributes:{}},
+      [`${root}_crop_data_supported`]:{entity_id:`${root}_crop_data_supported`,state:'on',attributes:{}},
+      [`${root}_reference_evapotranspiration`]:{entity_id:`${root}_reference_evapotranspiration`,state:'4.12',attributes:{unit_of_measurement:'mm'}},
+      [`${root}_crop_coefficient`]:{entity_id:`${root}_crop_coefficient`,state:'0.9',attributes:{}},
+      [`${root}_crop_evapotranspiration`]:{entity_id:`${root}_crop_evapotranspiration`,state:'3.71',attributes:{unit_of_measurement:'mm'}},
+      [`${root}_crop_water_requirement`]:{entity_id:`${root}_crop_water_requirement`,state:'1.48',attributes:{unit_of_measurement:'t'}}
+    };
+    const hass={states,locale:{language:'zh-TW'},config:{time_zone:'Asia/Taipei'}};
+    document.querySelectorAll('opencwa-crop-card').forEach(card=>{card.setConfig({entity:anchor,profile_id:'01KXXDEMO123456'});card.hass=hass});
+  </script>
+</body>
+</html>

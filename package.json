@@ -1,0 +1,21 @@
+{
+  "name": "opencwa-crop-card",
+  "version": "1.0.0",
+  "description": "Professional responsive Lovelace crop advisory card for OpenCWA",
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "build": "node scripts/build.mjs",
+    "check": "npm test && npm run build && node --check opencwa-crop-card.js"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.6",
+    "happy-dom": "^20.11.0"
+  },
+  "files": [
+    "opencwa-crop-card.js",
+    "hacs.json",
+    "README.md",
+    "LICENSE"
+  ]
+}
