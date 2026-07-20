@@ -1,7 +1,7 @@
-/* OpenCWA Crop Card v1.0.3 | MIT */
+/* OpenCWA Crop Card v1.1.0 | MIT */
 (() => {
   // src/core.js
-  var CARD_VERSION = "1.0.3";
+  var CARD_VERSION = "1.1.0";
   var STATUS_SUFFIX = "_agricultural_advisory_status";
   var ENTITY_SUFFIXES = Object.freeze({
     status: "_agricultural_advisory_status",
@@ -57,6 +57,8 @@
       entity: typeof config.entity === "string" ? config.entity.trim() : "",
       profile_id: typeof config.profile_id === "string" ? config.profile_id.trim() : "",
       title: typeof config.title === "string" ? config.title.trim() : "",
+      show_irrigation: config.show_irrigation !== false,
+      show_profile: config.show_profile !== false,
       show_knowledge: config.show_knowledge !== false,
       show_source: config.show_source !== false,
       default_expand_alerts: config.default_expand_alerts === true
@@ -219,7 +221,7 @@
       const options = findCropOptions(this._hass?.states || {});
       const optionHtml = options.map((option) => `<option value="${escapeHtml(option.entity)}" data-profile-id="${escapeHtml(option.profileId)}" ${option.entity === this._config.entity ? "selected" : ""}>${escapeHtml(option.label)}</option>`).join("");
       const cropField = options.length ? `<label class="field">OpenCWA \u4F5C\u7269<select data-key="entity"><option value="">\u8ACB\u9078\u64C7\u4F5C\u7269</option>${optionHtml}</select></label>` : `<div class="empty">\u76EE\u524D\u627E\u4E0D\u5230\u53EF\u8A2D\u5B9A\u7684OpenCWA\u4F5C\u7269\u3002\u8ACB\u5148\u5728OpenCWA\u6574\u5408\u4E2D\u555F\u7528\u8FB2\u696D\u6C23\u8C61\uFF0C\u4E26\u65B0\u589E\u81F3\u5C11\u4E00\u7B46\u4F5C\u7269\u3002</div>`;
-      this.shadowRoot.innerHTML = `<style>${editorCss}</style><div class="editor"><section class="section"><div class="section-title"><ha-icon icon="mdi:sprout"></ha-icon>\u4F5C\u7269\u8207\u6A19\u984C</div>${cropField}<label class="field">\u81EA\u8A02\u5361\u7247\u6A19\u984C\uFF08\u9078\u586B\uFF09<input type="text" data-key="title" value="${escapeHtml(this._config.title)}" placeholder="\u9810\u8A2D\u4F7F\u7528\u4F5C\u7269\u540D\u7A31"></label></section><section class="section"><div class="section-title"><ha-icon icon="mdi:view-dashboard-outline"></ha-icon>\u8CC7\u8A0A\u986F\u793A</div>${this._toggle("show_knowledge", "\u986F\u793A\u98A8\u96AA\u77E5\u8B58\u5EAB", "\u5217\u51FA\u8A72\u4F5C\u7269\u7684\u5B8C\u6574\u707D\u5BB3\u898F\u5247\u8207\u9632\u7BC4\u3001\u5FA9\u8015\u8CC7\u8A0A", this._config.show_knowledge)}${this._toggle("show_source", "\u986F\u793A\u8CC7\u6599\u4F86\u6E90", "\u986F\u793Aprovider\u3001\u8CC7\u6599\u6642\u9593\u8207\u9023\u7DDA\u72C0\u614B", this._config.show_source)}${this._toggle("default_expand_alerts", "\u9810\u8A2D\u5C55\u958B\u5168\u90E8\u8B66\u793A", "\u95DC\u9589\u6642\u53EA\u986F\u793A\u6700\u9AD8\u512A\u5148\u8B66\u793A\uFF0C\u5176\u9918\u4EE5+N\u5448\u73FE", this._config.default_expand_alerts)}</section></div>`;
+      this.shadowRoot.innerHTML = `<style>${editorCss}</style><div class="editor"><section class="section"><div class="section-title"><ha-icon icon="mdi:sprout"></ha-icon>\u4F5C\u7269\u8207\u6A19\u984C</div>${cropField}<label class="field">\u81EA\u8A02\u5361\u7247\u6A19\u984C\uFF08\u9078\u586B\uFF09<input type="text" data-key="title" value="${escapeHtml(this._config.title)}" placeholder="\u9810\u8A2D\u4F7F\u7528\u4F5C\u7269\u540D\u7A31"></label></section><section class="section"><div class="section-title"><ha-icon icon="mdi:view-dashboard-outline"></ha-icon>\u8CC7\u8A0A\u986F\u793A</div>${this._toggle("show_irrigation", "\u986F\u793A\u704C\u6E89\u53C3\u8003", "\u986F\u793AET\u2080\u3001Kc\u3001ETc\u8207\u4F5C\u7269\u9700\u6C34\u91CF", this._config.show_irrigation)}${this._toggle("show_profile", "\u986F\u793A\u4F5C\u7269\u6A94\u6848", "\u986F\u793A\u751F\u80B2\u671F\u3001\u7A2E\u690D\u8CC7\u8A0A\u3001\u5730\u9EDE\u8207\u547D\u4E2D\u898F\u5247", this._config.show_profile)}${this._toggle("show_knowledge", "\u986F\u793A\u4F5C\u7269\u98A8\u96AA\u77E5\u8B58\u5EAB", "\u5217\u51FA\u8A72\u4F5C\u7269\u7684\u5B8C\u6574\u707D\u5BB3\u898F\u5247\u8207\u9632\u7BC4\u3001\u5FA9\u8015\u8CC7\u8A0A", this._config.show_knowledge)}${this._toggle("show_source", "\u986F\u793A\u8CC7\u6599\u4F86\u6E90", "\u986F\u793Aprovider\u3001\u8CC7\u6599\u6642\u9593\u8207\u9023\u7DDA\u72C0\u614B", this._config.show_source)}${this._toggle("default_expand_alerts", "\u9810\u8A2D\u5C55\u958B\u5168\u90E8\u8B66\u793A", "\u95DC\u9589\u6642\u53EA\u986F\u793A\u6700\u9AD8\u512A\u5148\u8B66\u793A\uFF0C\u5176\u9918\u4EE5+N\u5448\u73FE", this._config.default_expand_alerts)}</section></div>`;
       this.shadowRoot.querySelector('select[data-key="entity"]')?.addEventListener("change", (event) => {
         const selected = event.currentTarget.selectedOptions[0];
         this._emit({ entity: event.currentTarget.value, profile_id: selected?.dataset.profileId || "" });
@@ -354,6 +356,9 @@
   function profileDatum(label, value) {
     return `<div class="datum"><div class="datum-label">${escapeHtml(label)}</div><div class="datum-value">${escapeHtml(value)}</div></div>`;
   }
+  function knowledgeRuleKey(rule, index) {
+    return JSON.stringify([rule.disaster || "", rule.stage || rule.growth || "", rule.threshold || "", rule.measures || "", index]);
+  }
   var OpenCwaCropCard = class extends HTMLElement {
     constructor() {
       super();
@@ -362,11 +367,14 @@
       this._config = normalizedConfig({});
       this._layout = "regular";
       this._expandedAlerts = false;
+      this._openKnowledgeRules = /* @__PURE__ */ new Set();
       this._renderQueued = false;
       this._observer = null;
     }
     setConfig(config) {
-      this._config = normalizedConfig(config);
+      const next = normalizedConfig(config);
+      if (next.entity !== this._config.entity || next.profile_id !== this._config.profile_id) this._openKnowledgeRules.clear();
+      this._config = next;
       this._expandedAlerts = this._config.default_expand_alerts;
       this._measure();
       this._queueRender();
@@ -438,6 +446,7 @@
     </section>`;
     }
     _renderActions(model) {
+      if (model.level === "normal" || model.level === "no-data") return "";
       const item = model.items[0] || {};
       const prevention = item.prevention || (model.level === "normal" ? "\u7DAD\u6301\u4F8B\u884C\u5DE1\u7530\u8207\u704C\u6E89\u7D00\u9304\u3002" : "\u76EE\u524D\u6C92\u6709\u53EF\u7528\u7684\u5373\u6642\u9632\u7BC4\u5EFA\u8B70\uFF0C\u8ACB\u53C3\u8003\u4F5C\u7269\u98A8\u96AA\u77E5\u8B58\u5EAB\u3002");
       const recovery = item.recovery || "\u82E5\u707D\u5BB3\u767C\u751F\uFF0C\u5148\u8A18\u9304\u7530\u5340\u72C0\u6CC1\u4E26\u4F9D\u5C08\u696D\u8FB2\u696D\u55AE\u4F4D\u6307\u5F15\u8655\u7F6E\u3002";
@@ -447,21 +456,26 @@
     </div></section>`;
     }
     _renderMetrics(model) {
+      if (!this._config.show_irrigation) return "";
       return `<section class="panel metrics-panel"><h3 class="panel-title">${icon("mdi:watering-can-outline")}\u704C\u6E89\u53C3\u8003</h3><div class="metric-grid">${model.metrics.map((metric) => `<button class="metric ${metric.available ? "" : "unavailable"}" data-entity="${escapeHtml(metric.entity)}"><div class="metric-label">${icon(metric.icon)}${escapeHtml(metric.label)}</div><div class="metric-value">${escapeHtml(metric.value)}</div></button>`).join("")}</div></section>`;
     }
     _renderProfile(model) {
+      if (!this._config.show_profile) return "";
       return `<section class="panel profile-panel"><h3 class="panel-title">${icon("mdi:sprout-outline")}\u4F5C\u7269\u6A94\u6848</h3><div class="profile-grid">
       ${profileDatum("\u76EE\u524D\u751F\u80B2\u671F", model.profile.growthStage)}${profileDatum("\u98A8\u96AA\u9069\u7528\u671F", model.profile.stage)}${profileDatum("\u7A2E\u690D\u65E5\u671F", model.profile.plantingDate)}${profileDatum("\u7A2E\u690D\u9762\u7A4D", model.profile.area)}${profileDatum("\u8CC7\u6599\u5730\u9EDE", model.profile.location)}${profileDatum("\u547D\u4E2D\u898F\u5247", `${model.counts.matched} \u9805`)}
     </div></section>`;
     }
     _renderKnowledge(model) {
       if (!this._config.show_knowledge) return "";
-      const rules = model.rules.length ? model.rules.map((rule) => `<details class="rule"><summary><span>${escapeHtml(rule.disaster || "\u8FB2\u696D\u98A8\u96AA")}</span><span class="rule-stage">${escapeHtml(rule.stage || rule.growth || "")}</span></summary><div class="rule-body">
+      const rules = model.rules.length ? model.rules.map((rule, index) => {
+        const key = knowledgeRuleKey(rule, index);
+        return `<details class="rule" data-rule-key="${escapeHtml(key)}" ${this._openKnowledgeRules.has(key) ? "open" : ""}><summary><span>${escapeHtml(rule.disaster || "\u8FB2\u696D\u98A8\u96AA")}</span><span class="rule-stage">${escapeHtml(rule.stage || rule.growth || "")}</span></summary><div class="rule-body">
       ${rule.effect ? `<div class="rule-row"><strong>\u53EF\u80FD\u5F71\u97FF</strong><span>${escapeHtml(rule.effect)}</span></div>` : ""}
       ${rule.prevention ? `<div class="rule-row"><strong>\u4E8B\u524D\u9632\u7BC4</strong><span>${escapeHtml(rule.prevention)}</span></div>` : ""}
       ${rule.recovery ? `<div class="rule-row"><strong>\u5FA9\u8015\u8655\u7F6E</strong><span>${escapeHtml(rule.recovery)}</span></div>` : ""}
       ${rule.threshold ? `<div class="rule-row"><strong>\u53C3\u8003\u9580\u6ABB</strong><span>${escapeHtml(`${rule.threshold} ${rule.measures || ""}\uFF0F${rule.duration || "\u2014"} \u5C0F\u6642`)}</span></div>` : ""}
-    </div></details>`).join("") : `<div class="action-text">\u5C1A\u7121\u6B64\u4F5C\u7269\u7684\u98A8\u96AA\u898F\u5247\u3002</div>`;
+    </div></details>`;
+      }).join("") : `<div class="action-text">\u5C1A\u7121\u6B64\u4F5C\u7269\u7684\u98A8\u96AA\u898F\u5247\u3002</div>`;
       return `<section class="panel panel-wide knowledge-panel"><h3 class="panel-title">${icon("mdi:book-open-variant")}\u4F5C\u7269\u98A8\u96AA\u77E5\u8B58\u5EAB</h3>${rules}</section>`;
     }
     _renderSource(model) {
@@ -487,6 +501,10 @@
         this._expandedAlerts = !this._expandedAlerts;
         this._render();
       });
+      this.shadowRoot.querySelectorAll("details[data-rule-key]").forEach((details) => details.addEventListener("toggle", () => {
+        if (details.open) this._openKnowledgeRules.add(details.dataset.ruleKey);
+        else this._openKnowledgeRules.delete(details.dataset.ruleKey);
+      }));
       this.shadowRoot.querySelectorAll("[data-entity]").forEach((element) => {
         const open = (event) => {
           if (event.target.closest?.("[data-alert-toggle]")) return;

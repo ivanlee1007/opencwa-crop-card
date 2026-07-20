@@ -148,6 +148,77 @@ test("standard compact card keeps crop profile and risk knowledge visible", asyn
   card.remove();
 });
 
+test("section visibility options independently hide irrigation profile and knowledge", async () => {
+  const card = document.createElement("opencwa-crop-card");
+  document.body.append(card);
+  card.setConfig({ entity: anchor, show_irrigation: false, show_profile: false, show_knowledge: false });
+  card.hass = hassFixture(false);
+  await settle();
+  assert.equal(Boolean(card.shadowRoot.querySelector(".metrics-panel")), false);
+  assert.equal(Boolean(card.shadowRoot.querySelector(".profile-panel")), false);
+  assert.equal(Boolean(card.shadowRoot.querySelector(".knowledge-panel")), false);
+  assert.equal(Boolean(card.shadowRoot.querySelector(".action-panel")), true);
+
+  card.setConfig({ entity: anchor, show_irrigation: true, show_profile: true, show_knowledge: true });
+  await settle();
+  assert.equal(Boolean(card.shadowRoot.querySelector(".metrics-panel")), true);
+  assert.equal(Boolean(card.shadowRoot.querySelector(".profile-panel")), true);
+  assert.equal(Boolean(card.shadowRoot.querySelector(".knowledge-panel")), true);
+  card.remove();
+});
+
+test("actions appear only for active advice or unavailable safety states", async () => {
+  const card = document.createElement("opencwa-crop-card");
+  document.body.append(card);
+  card.setConfig({ entity: anchor });
+
+  const noData = hassFixture(false);
+  noData.states[anchor].state = "no_data";
+  noData.states[anchor].attributes.advisory_active = false;
+  noData.states[anchor].attributes.items = [];
+  card.hass = noData;
+  await settle();
+  assert.equal(Boolean(card.shadowRoot.querySelector(".action-panel")), false);
+
+  const normal = hassFixture(false);
+  normal.states[anchor].state = "normal";
+  normal.states[anchor].attributes.advisory_active = false;
+  normal.states[anchor].attributes.items = [];
+  card.hass = normal;
+  await settle();
+  assert.equal(Boolean(card.shadowRoot.querySelector(".action-panel")), false);
+
+  const unavailable = hassFixture(false);
+  unavailable.states[anchor].state = "unavailable";
+  card.hass = unavailable;
+  await settle();
+  assert.equal(Boolean(card.shadowRoot.querySelector(".action-panel")), true);
+
+  card.hass = hassFixture(false);
+  await settle();
+  assert.equal(Boolean(card.shadowRoot.querySelector(".action-panel")), true);
+  card.remove();
+});
+
+test("open knowledge rule survives Home Assistant state rerenders", async () => {
+  const card = document.createElement("opencwa-crop-card");
+  document.body.append(card);
+  card.setConfig({ entity: anchor, profile_id: "stable-crop-1", show_knowledge: true });
+  card.hass = hassFixture(false);
+  await settle();
+  const details = card.shadowRoot.querySelector("details.rule");
+  details.open = true;
+  details.dispatchEvent(new Event("toggle"));
+
+  const nextHass = hassFixture(false);
+  nextHass.states[anchor].attributes.source_timestamp = "2026-07-20T02:00:00+08:00";
+  card.hass = nextHass;
+  await settle();
+
+  assert.equal(card.shadowRoot.querySelector("details.rule").open, true);
+  card.remove();
+});
+
 
 test("editor lists discovered crops and emits strict boolean config", async () => {
   const editor = document.createElement("opencwa-crop-card-editor");
@@ -157,12 +228,15 @@ test("editor lists discovered crops and emits strict boolean config", async () =
   await settle();
   const select = editor.shadowRoot.querySelector('select[data-key="entity"]');
   assert.match(select.textContent, /甘藍/);
-  const checkbox = editor.shadowRoot.querySelector('input[data-key="show_knowledge"]');
+  for (const key of ["show_irrigation", "show_profile", "show_knowledge"]) {
+    assert.equal(editor.shadowRoot.querySelector(`input[data-key="${key}"]`)?.checked, true);
+  }
+  const checkbox = editor.shadowRoot.querySelector('input[data-key="show_irrigation"]');
   let next;
   editor.addEventListener("config-changed", (event) => { next = event.detail.config; });
   checkbox.checked = false;
   checkbox.dispatchEvent(new Event("change", { bubbles: true }));
-  assert.equal(next.show_knowledge, false);
+  assert.equal(next.show_irrigation, false);
   const cropSelect = editor.shadowRoot.querySelector('select[data-key="entity"]');
   cropSelect.value = anchor;
   cropSelect.dispatchEvent(new Event("change", { bubbles: true }));

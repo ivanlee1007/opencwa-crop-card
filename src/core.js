@@ -64,6 +64,8 @@ export function normalizedConfig(config = {}) {
     entity: typeof config.entity === "string" ? config.entity.trim() : "",
     profile_id: typeof config.profile_id === "string" ? config.profile_id.trim() : "",
     title: typeof config.title === "string" ? config.title.trim() : "",
+    show_irrigation: config.show_irrigation !== false,
+    show_profile: config.show_profile !== false,
     show_knowledge: config.show_knowledge !== false,
     show_source: config.show_source !== false,
     default_expand_alerts: config.default_expand_alerts === true,

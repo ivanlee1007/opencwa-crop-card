@@ -131,6 +131,10 @@ function profileDatum(label, value) {
   return `<div class="datum"><div class="datum-label">${escapeHtml(label)}</div><div class="datum-value">${escapeHtml(value)}</div></div>`;
 }
 
+function knowledgeRuleKey(rule, index) {
+  return JSON.stringify([rule.disaster || "", rule.stage || rule.growth || "", rule.threshold || "", rule.measures || "", index]);
+}
+
 export class OpenCwaCropCard extends HTMLElement {
   constructor() {
     super();
@@ -139,12 +143,15 @@ export class OpenCwaCropCard extends HTMLElement {
     this._config = normalizedConfig({});
     this._layout = "regular";
     this._expandedAlerts = false;
+    this._openKnowledgeRules = new Set();
     this._renderQueued = false;
     this._observer = null;
   }
 
   setConfig(config) {
-    this._config = normalizedConfig(config);
+    const next = normalizedConfig(config);
+    if (next.entity !== this._config.entity || next.profile_id !== this._config.profile_id) this._openKnowledgeRules.clear();
+    this._config = next;
     this._expandedAlerts = this._config.default_expand_alerts;
     this._measure();
     this._queueRender();
@@ -229,6 +236,7 @@ export class OpenCwaCropCard extends HTMLElement {
   }
 
   _renderActions(model) {
+    if (model.level === "normal" || model.level === "no-data") return "";
     const item = model.items[0] || {};
     const prevention = item.prevention || (model.level === "normal" ? "維持例行巡田與灌溉紀錄。" : "目前沒有可用的即時防範建議，請參考作物風險知識庫。" );
     const recovery = item.recovery || "若災害發生，先記錄田區狀況並依專業農業單位指引處置。";
@@ -239,10 +247,12 @@ export class OpenCwaCropCard extends HTMLElement {
   }
 
   _renderMetrics(model) {
+    if (!this._config.show_irrigation) return "";
     return `<section class="panel metrics-panel"><h3 class="panel-title">${icon("mdi:watering-can-outline")}灌溉參考</h3><div class="metric-grid">${model.metrics.map((metric) => `<button class="metric ${metric.available ? "" : "unavailable"}" data-entity="${escapeHtml(metric.entity)}"><div class="metric-label">${icon(metric.icon)}${escapeHtml(metric.label)}</div><div class="metric-value">${escapeHtml(metric.value)}</div></button>`).join("")}</div></section>`;
   }
 
   _renderProfile(model) {
+    if (!this._config.show_profile) return "";
     return `<section class="panel profile-panel"><h3 class="panel-title">${icon("mdi:sprout-outline")}作物檔案</h3><div class="profile-grid">
       ${profileDatum("目前生育期", model.profile.growthStage)}${profileDatum("風險適用期", model.profile.stage)}${profileDatum("種植日期", model.profile.plantingDate)}${profileDatum("種植面積", model.profile.area)}${profileDatum("資料地點", model.profile.location)}${profileDatum("命中規則", `${model.counts.matched} 項`)}
     </div></section>`;
@@ -250,12 +260,15 @@ export class OpenCwaCropCard extends HTMLElement {
 
   _renderKnowledge(model) {
     if (!this._config.show_knowledge) return "";
-    const rules = model.rules.length ? model.rules.map((rule) => `<details class="rule"><summary><span>${escapeHtml(rule.disaster || "農業風險")}</span><span class="rule-stage">${escapeHtml(rule.stage || rule.growth || "")}</span></summary><div class="rule-body">
+    const rules = model.rules.length ? model.rules.map((rule, index) => {
+      const key = knowledgeRuleKey(rule, index);
+      return `<details class="rule" data-rule-key="${escapeHtml(key)}" ${this._openKnowledgeRules.has(key) ? "open" : ""}><summary><span>${escapeHtml(rule.disaster || "農業風險")}</span><span class="rule-stage">${escapeHtml(rule.stage || rule.growth || "")}</span></summary><div class="rule-body">
       ${rule.effect ? `<div class="rule-row"><strong>可能影響</strong><span>${escapeHtml(rule.effect)}</span></div>` : ""}
       ${rule.prevention ? `<div class="rule-row"><strong>事前防範</strong><span>${escapeHtml(rule.prevention)}</span></div>` : ""}
       ${rule.recovery ? `<div class="rule-row"><strong>復耕處置</strong><span>${escapeHtml(rule.recovery)}</span></div>` : ""}
       ${rule.threshold ? `<div class="rule-row"><strong>參考門檻</strong><span>${escapeHtml(`${rule.threshold} ${rule.measures || ""}／${rule.duration || "—"} 小時`)}</span></div>` : ""}
-    </div></details>`).join("") : `<div class="action-text">尚無此作物的風險規則。</div>`;
+    </div></details>`;
+    }).join("") : `<div class="action-text">尚無此作物的風險規則。</div>`;
     return `<section class="panel panel-wide knowledge-panel"><h3 class="panel-title">${icon("mdi:book-open-variant")}作物風險知識庫</h3>${rules}</section>`;
   }
 
@@ -280,6 +293,10 @@ export class OpenCwaCropCard extends HTMLElement {
       <div class="crop-body">${this._renderAlert(model)}<div class="section-grid">${this._renderActions(model)}${this._renderMetrics(model)}${this._renderProfile(model)}${this._renderKnowledge(model)}</div>${this._renderSource(model)}</div>
     </div></ha-card>`;
     this.shadowRoot.querySelector("[data-alert-toggle]")?.addEventListener("click", () => { this._expandedAlerts = !this._expandedAlerts; this._render(); });
+    this.shadowRoot.querySelectorAll("details[data-rule-key]").forEach((details) => details.addEventListener("toggle", () => {
+      if (details.open) this._openKnowledgeRules.add(details.dataset.ruleKey);
+      else this._openKnowledgeRules.delete(details.dataset.ruleKey);
+    }));
     this.shadowRoot.querySelectorAll("[data-entity]").forEach((element) => {
       const open = (event) => {
         if (event.target.closest?.("[data-alert-toggle]")) return;

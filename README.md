@@ -13,6 +13,7 @@
 - 使用穩定的 `crop_profile_id` 辨識作物；同名作物仍可分別選擇。
 - 一級警示使用高對比紅色 Banner、粗體與警示圖示，任何尺寸都不隱藏。
 - 多筆警示預設顯示最高優先項，其餘以 `+N` 收合，可點擊展開。
+- 風險知識庫的展開項目會在 Home Assistant state 更新後維持展開；切換作物時才重置。
 - 農務資訊分類：
   - **現在要做**：立即防範、災後復耕。
   - **灌溉參考**：ET₀、Kc、ETc、作物需水量。
@@ -51,9 +52,13 @@
 
 - **OpenCWA 作物**：從目前已存在的作物清單選擇。
 - **自訂卡片標題**：選填；預設使用作物名稱。
-- **顯示風險知識庫**：預設開啟。
+- **顯示灌溉參考**：預設開啟。
+- **顯示作物檔案**：預設開啟。
+- **顯示作物風險知識庫**：預設開啟。
 - **顯示資料來源**：預設開啟。
 - **預設展開全部警示**：預設關閉。
+
+「現在要做」只在 warning、advisory 或資料來源 unavailable 時顯示；正常與資料不足狀態不顯示泛用行動欄。
 
 ## YAML
 
@@ -62,6 +67,8 @@ type: custom:opencwa-crop-card
 entity: sensor.example_agricultural_advisory_status
 profile_id: 01KXXEXAMPLESTABLEID
 title: 一期甘藍
+show_irrigation: true
+show_profile: true
 show_knowledge: true
 show_source: true
 default_expand_alerts: false

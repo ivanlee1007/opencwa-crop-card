@@ -153,8 +153,10 @@ test("layout uses card width, height and aspect ratio", () => {
 });
 
 test("normalization preserves explicit false and rejects string booleans", () => {
-  const config = normalizedConfig({ entity: ` ${anchor} `, show_knowledge: false, show_source: "false", default_expand_alerts: "true" });
+  const config = normalizedConfig({ entity: ` ${anchor} `, show_irrigation: false, show_profile: false, show_knowledge: false, show_source: "false", default_expand_alerts: "true" });
   assert.equal(config.entity, anchor);
+  assert.equal(config.show_irrigation, false);
+  assert.equal(config.show_profile, false);
   assert.equal(config.show_knowledge, false);
   assert.equal(config.show_source, true);
   assert.equal(config.default_expand_alerts, false);
