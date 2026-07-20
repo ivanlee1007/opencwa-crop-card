@@ -13,6 +13,8 @@ export const ENTITY_SUFFIXES = Object.freeze({
   water: "_crop_water_requirement",
 });
 
+const BINARY_ENTITY_KEYS = new Set(["warning", "advisory", "supported"]);
+
 const BAD_STATES = new Set(["unknown", "unavailable", "none", "null", ""]);
 const WARNING_STATES = new Set(["warning", "danger", "critical", "severe"]);
 const ADVISORY_STATES = new Set(["advisory", "active", "watch"]);
@@ -24,7 +26,10 @@ export function isUsableState(stateObj) {
 export function cropEntityMap(anchorEntity) {
   if (typeof anchorEntity !== "string" || !anchorEntity.endsWith(STATUS_SUFFIX)) return {};
   const root = anchorEntity.slice(0, -STATUS_SUFFIX.length);
-  return Object.fromEntries(Object.entries(ENTITY_SUFFIXES).map(([key, suffix]) => [key, `${root}${suffix}`]));
+  return Object.fromEntries(Object.entries(ENTITY_SUFFIXES).map(([key, suffix]) => {
+    const entity = `${root}${suffix}`;
+    return [key, BINARY_ENTITY_KEYS.has(key) ? entity.replace(/^sensor\./, "binary_sensor.") : entity];
+  }));
 }
 
 export function findCropOptions(states = {}) {

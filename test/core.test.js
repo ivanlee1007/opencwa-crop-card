@@ -12,6 +12,17 @@ import {
 
 const anchor = "sensor.opencwa_farm_cabbage_agricultural_advisory_status";
 const ids = cropEntityMap(anchor);
+
+test("maps crop binary siblings to the binary_sensor domain", () => {
+  const mapped = cropEntityMap(anchor);
+  assert.equal(mapped.status, anchor);
+  assert.equal(mapped.notification, "sensor.opencwa_farm_cabbage_agricultural_advisory_notification");
+  assert.equal(mapped.warning, "binary_sensor.opencwa_farm_cabbage_crop_warning");
+  assert.equal(mapped.advisory, "binary_sensor.opencwa_farm_cabbage_crop_advisory");
+  assert.equal(mapped.supported, "binary_sensor.opencwa_farm_cabbage_crop_data_supported");
+  assert.equal(mapped.et0, "sensor.opencwa_farm_cabbage_reference_evapotranspiration");
+});
+
 function fixture(overrides = {}) {
   return {
     [anchor]: {

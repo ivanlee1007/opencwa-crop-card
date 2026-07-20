@@ -1,7 +1,7 @@
-/* OpenCWA Crop Card v1.1.0 | MIT */
+/* OpenCWA Crop Card v1.1.1 | MIT */
 (() => {
   // src/core.js
-  var CARD_VERSION = "1.1.0";
+  var CARD_VERSION = "1.1.1";
   var STATUS_SUFFIX = "_agricultural_advisory_status";
   var ENTITY_SUFFIXES = Object.freeze({
     status: "_agricultural_advisory_status",
@@ -14,6 +14,7 @@
     etc: "_crop_evapotranspiration",
     water: "_crop_water_requirement"
   });
+  var BINARY_ENTITY_KEYS = /* @__PURE__ */ new Set(["warning", "advisory", "supported"]);
   var BAD_STATES = /* @__PURE__ */ new Set(["unknown", "unavailable", "none", "null", ""]);
   var WARNING_STATES = /* @__PURE__ */ new Set(["warning", "danger", "critical", "severe"]);
   var ADVISORY_STATES = /* @__PURE__ */ new Set(["advisory", "active", "watch"]);
@@ -23,7 +24,10 @@
   function cropEntityMap(anchorEntity) {
     if (typeof anchorEntity !== "string" || !anchorEntity.endsWith(STATUS_SUFFIX)) return {};
     const root = anchorEntity.slice(0, -STATUS_SUFFIX.length);
-    return Object.fromEntries(Object.entries(ENTITY_SUFFIXES).map(([key, suffix]) => [key, `${root}${suffix}`]));
+    return Object.fromEntries(Object.entries(ENTITY_SUFFIXES).map(([key, suffix]) => {
+      const entity = `${root}${suffix}`;
+      return [key, BINARY_ENTITY_KEYS.has(key) ? entity.replace(/^sensor\./, "binary_sensor.") : entity];
+    }));
   }
   function findCropOptions(states = {}) {
     return Object.values(states).filter((stateObj) => stateObj?.entity_id?.endsWith(STATUS_SUFFIX)).map((stateObj) => {
